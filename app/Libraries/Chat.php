@@ -34,6 +34,10 @@ class Chat implements MessageComponentInterface
 
   public function onMessage(ConnectionInterface $from, $msg)
   {
+    echo "Mensaje crudo recibido: $msg\n";
+    $data = json_decode($msg, true);
+    var_dump($data);
+
     $numRecv = count($this->clients) - 1;
     echo sprintf(
       'Conexión %d enviando mensaje "%s" a %d otro(s) cliente(s)' . "\n",
@@ -44,7 +48,6 @@ class Chat implements MessageComponentInterface
 
     $data = json_decode($msg, true);
 
-    // Preparar el mensaje para enviar
     $response = [
       'type' => 'message',
       'user_id' => $from->resourceId,
@@ -53,7 +56,16 @@ class Chat implements MessageComponentInterface
       'timestamp' => date('H:i:s')
     ];
 
-    // Enviar a todos los clientes conectados (incluyendo el remitente)
+    if ($data['type'] === 'nueva_averia') {
+      foreach ($this->clients as $client) {
+        $client->send(json_encode([
+          'type' => 'nueva_averia',
+          'averia' => $data['averia']
+        ]));
+      }
+      return;
+    }
+    
     $this->broadcast($response);
   }
 

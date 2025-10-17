@@ -13,23 +13,30 @@ class AveriaController extends BaseController
     return view('averias/index', $data);
   }
 
-  public function crear():string
+  public function crear(): string
   {
     return view('averias/registrar');
   }
 
-  public function save(){
+  public function save()
+  {
+    $data = $this->request->getJSON(true);
+    if (!$data) return $this->response->setJSON(['success' => false, 'msg' => 'Datos inválidos']);
+
     $model = new Averia();
-
-    $data = [
-      'nombres' => $this->request->getPost('nombres'),
-      'problema' => $this->request->getPost('problema'),
-      'fechahora' => $this->request->getPost('fechahora'),
+    $id = $model->crear([
+      'nombres' => $data['nombres'],
+      'problema' => $data['problema'],
+      'fechahora' => $data['fechahora'],
       'status' => 'PENDIENTE',
-    ];
+    ]);
 
-    $model->crear($data);
+    if ($id) {
+      $nuevaAveria = $model->find($id);
+      return $this->response->setJSON(['success' => true, 'averia' => $nuevaAveria]);
+    }
 
-    return redirect()->to('/averias');
+    redirect()->to('/averias');
+    return $this->response->setJSON(['success' => false]);
   }
 }
